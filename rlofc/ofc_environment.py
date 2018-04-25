@@ -236,6 +236,66 @@ class OFCEnvironment(object):
 
         return lhs_score, lhs_board, rhs_board
 
+    def play_game_human_cpu(self):
+        """Rollout one OFC game and return the LHS score and LHS/RHS boards."""
+        deck = DeckGenerator.new_deck()
+
+        lhs_board = OFCBoard()
+        rhs_board = OFCBoard()
+
+        lhs_start = deck[0:5]
+        rhs_start = deck[6:11]
+
+        # Starting hand one card at a time for now. In future, give
+        # all cards at once
+        lhs_board.pretty()
+        print 'Player 1 starting cards;',
+        Card.print_pretty_cards([Card.new(card) for card in lhs_start])
+        for i in xrange(5):
+            card = lhs_start[i]
+            street_id = self.lhs_agent.place_new_card(card, lhs_board)
+            lhs_board.place_card_by_id(card, street_id)
+            lhs_board.pretty()
+
+        for i in xrange(5):
+            card = rhs_start[i]
+            street_id = self.rhs_agent.place_new_card(card, rhs_board)
+            rhs_board.place_card_by_id(card, street_id)
+        print('')
+
+        # Eight cards one at a time
+        for i in xrange(8):
+            self.print_both_boards(lhs_board, rhs_board)
+            card = deck.pop()
+            street_id = self.lhs_agent.place_new_card(card, lhs_board)
+            lhs_board.place_card_by_id(card, street_id)
+
+            card = deck.pop()
+            street_id = self.rhs_agent.place_new_card(card, rhs_board)
+            rhs_board.place_card_by_id(card, street_id)
+
+        print 'Final Boards'
+        self.print_both_boards(lhs_board, rhs_board)
+
+        lhs_royalties = lhs_board.get_royalties()
+        rhs_royalties = rhs_board.get_royalties()
+
+        if lhs_board.is_foul() and rhs_board.is_foul():
+            lhs_score = 0
+
+        elif lhs_board.is_foul():
+            lhs_score = (-1 * rhs_royalties) - 6
+
+        elif rhs_board.is_foul():
+            lhs_score = lhs_royalties + 6
+
+        else:
+            exch = self.calculate_scoop(lhs_board,
+                                        rhs_board)
+            lhs_score = exch + lhs_royalties - rhs_royalties
+
+        return lhs_score, lhs_board, rhs_board
+
     def print_both_boards(self, lhs_board, rhs_board):
         print 'Player 1 board:'
         lhs_board.pretty()

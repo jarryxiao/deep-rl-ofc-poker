@@ -50,7 +50,7 @@ class OFCHumanAgent(OFCAgent):
         while street not in free_streets:
             print("Please enter a valid street: " + str(free_streets))
             street = input()
-        
+        print('')
         return street
 
 class OFCComputerAgent(OFCAgent):
